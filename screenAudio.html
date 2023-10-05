@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>System Audio Capture</title>
+  </head>
+  <body>
+    <button id="startCapture">Start Capture</button>
+    <button id="stopCapture" style="display: block">Stop Capture</button>
+
+    <script>
+      let mediaRecorder;
+      let audioChunks = [];
+
+      const startCaptureButton = document.getElementById("startCapture");
+      const stopCaptureButton = document.getElementById("stopCapture");
+
+      async function startCapture() {
+        try {
+          const constraints = {
+            audio: true,
+            video: true,
+          };
+
+          const stream = await navigator.mediaDevices.getUserMedia(constraints); // allows you to get user audio from input devices
+
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audioElement = new Audio(audioUrl);
+            audioElement.controls = true;
+            document.body.appendChild(audioElement);
+
+            startCaptureButton.style.display = "block";
+            stopCaptureButton.style.display = "none";
+          };
+
+          mediaRecorder.start();
+
+          startCaptureButton.style.display = "none";
+          stopCaptureButton.style.display = "block";
+        } catch (error) {
+          console.error("Error capturing system audio:", error);
+        }
+      }
+
+      startCaptureButton.addEventListener("click", startCapture);
+
+      stopCaptureButton.addEventListener("click", () => {
+        mediaRecorder.stop();
+      });
+    </script>
+  </body>
+</html>
