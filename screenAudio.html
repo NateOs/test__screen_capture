@@ -6,7 +6,7 @@
   <body>
     <button id="startCapture">Start Capture</button>
     <button id="stopCapture" style="display: block">Stop Capture</button>
-
+    <video id="video"></video>
     <script>
       let mediaRecorder;
       let audioChunks = [];
@@ -18,20 +18,40 @@
         try {
           const constraints = {
             audio: true,
-            video: true,
+            //     video: { displaySurface: "monitor" },
           };
 
-          const stream = await navigator.mediaDevices.getUserMedia(constraints); // allows you to get user audio from input devices
+           const streamGetInputAudio = await navigator.mediaDevices.getUserMedia(constraints); // allows you to get user audio from input devices
+          // const streamGetOutputAudio = await navigator.mediaDevices.getDisplayMedia(
+          //   constraints,
+          // );
 
-          mediaRecorder = new MediaRecorder(stream);
+          //mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderInputAudio = new MediaRecorder(streamGetInputAudio);
 
-          mediaRecorder.ondataavailable = (event) => {
+          // mediaRecorder.ondataavailable = (event) => {
+          //   if (event.data.size > 0) {
+          //      audioChunks.push(event.data);
+          //    }
+          //   };
+
+          mediaRecorderInputAudio.ondataavailable = (event) => {
             if (event.data.size > 0) {
               audioChunks.push(event.data);
             }
           };
 
-          mediaRecorder.onstop = () => {
+          /*  mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audioElement = new Audio(audioUrl);
+            audioElement.controls = true;
+            document.body.appendChild(audioElement);
+
+            startCaptureButton.style.display = "block";
+            stopCaptureButton.style.display = "none";
+          };*/
+          mediaRecorderInputAudio.onstop = () => {
             const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
             const audioUrl = URL.createObjectURL(audioBlob);
             const audioElement = new Audio(audioUrl);
@@ -42,7 +62,8 @@
             stopCaptureButton.style.display = "none";
           };
 
-          mediaRecorder.start();
+          //mediaRecorder.start();
+          mediaRecorderInputAudio.start();
 
           startCaptureButton.style.display = "none";
           stopCaptureButton.style.display = "block";
@@ -54,7 +75,8 @@
       startCaptureButton.addEventListener("click", startCapture);
 
       stopCaptureButton.addEventListener("click", () => {
-        mediaRecorder.stop();
+        mediaRecorderInputAudio.stop();
+    //    mediaRecorder.stop();
       });
     </script>
   </body>
