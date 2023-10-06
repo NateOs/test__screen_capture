@@ -5,15 +5,17 @@
   </head>
   <body>
     <button id="startCapture">Start Capture</button>
-    <button id="stopCapture" style="display: block">Stop Capture</button>
-    <video id="video"></video>
+    <button id="stopCapture" style="display: none">Stop Capture</button>
+    <video id="video" style="display: none"></video>
     <script>
       let mediaRecorder;
       let audioChunks = [];
+      let audioChunks1 = [];
 
       const startCaptureButton = document.getElementById("startCapture");
       const stopCaptureButton = document.getElementById("stopCapture");
 
+      // function to record audio
       async function startCapture() {
         try {
           const constraints = {
@@ -21,19 +23,22 @@
             //     video: { displaySurface: "monitor" },
           };
 
-           const streamGetInputAudio = await navigator.mediaDevices.getUserMedia(constraints); // allows you to get user audio from input devices
-          // const streamGetOutputAudio = await navigator.mediaDevices.getDisplayMedia(
-          //   constraints,
-          // );
+          // allows you to get user audio from input devices
 
-          //mediaRecorder = new MediaRecorder(stream);
+          const streamGetInputAudio = await navigator.mediaDevices.getUserMedia(
+            constraints,
+          );
+          const streamGetOutputAudio =
+            await navigator.mediaDevices.getDisplayMedia(constraints);
+
+          mediaRecorderOutputAudio = new MediaRecorder(streamGetOutputAudio);
           mediaRecorderInputAudio = new MediaRecorder(streamGetInputAudio);
 
-          // mediaRecorder.ondataavailable = (event) => {
-          //   if (event.data.size > 0) {
-          //      audioChunks.push(event.data);
-          //    }
-          //   };
+          mediaRecorderOutputAudio.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              audioChunks1.push(event.data);
+            }
+          };
 
           mediaRecorderInputAudio.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -41,16 +46,17 @@
             }
           };
 
-          /*  mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audioElement = new Audio(audioUrl);
+          mediaRecorderOutputAudio.onstop = () => {
+            const audioBlob1 = new Blob(audioChunks1, { type: "audio/wav" });
+            const audioUrl1 = URL.createObjectURL(audioBlob1);
+            const audioElement = new Audio(audioUrl1);
             audioElement.controls = true;
             document.body.appendChild(audioElement);
 
             startCaptureButton.style.display = "block";
             stopCaptureButton.style.display = "none";
-          };*/
+          };
+
           mediaRecorderInputAudio.onstop = () => {
             const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -62,21 +68,27 @@
             stopCaptureButton.style.display = "none";
           };
 
-          //mediaRecorder.start();
+          mediaRecorderOutputAudio.start();
           mediaRecorderInputAudio.start();
 
           startCaptureButton.style.display = "none";
           stopCaptureButton.style.display = "block";
+
         } catch (error) {
           console.error("Error capturing system audio:", error);
         }
       }
 
+      async function stopCapture() {
+        mediaRecorderInputAudio.stop();
+        mediaRecorderOutputAudio.stop()
+      }
+
       startCaptureButton.addEventListener("click", startCapture);
 
       stopCaptureButton.addEventListener("click", () => {
-        mediaRecorderInputAudio.stop();
-    //    mediaRecorder.stop();
+        stopCapture();
+        //    mediaRecorder.stop();
       });
     </script>
   </body>
